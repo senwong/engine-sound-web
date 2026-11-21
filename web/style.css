@@ -387,6 +387,30 @@ body {
   cursor: pointer;
 }
 
+.preset-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.preset-tab {
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: #10141d;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.preset-tab.active {
+  color: #fff;
+  border-color: var(--accent);
+  background: rgba(255, 69, 58, 0.16);
+}
+
 .preset-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
@@ -640,6 +664,24 @@ input[type="range"] {
   }
 
   /* Spacious touch cards & oversized slider knobs */
+  .preset-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    min-width: 0;
+  }
+
+  .preset-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .preset-tab {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
   .preset-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;

@@ -110,6 +110,7 @@ fn build_custom_engine(
 }
 
 fn build_preset(preset_id: u32, sample_rate: u32) -> Engine {
+    let sr = sample_rate;
     match preset_id {
         0 => load_ron_preset(PRESET_DEFAULT, sample_rate),
         1 => load_ron_preset(PRESET_EX1, sample_rate),
@@ -170,7 +171,7 @@ fn build_preset(preset_id: u32, sample_rate: u32) -> Engine {
             0.002,
         ),
         // 10: Unequal-length header Boxer-4 (Subie rumble)
-        _ => build_custom_engine(
+        10 => build_custom_engine(
             sample_rate,
             &[0.0, 0.25, 0.5, 0.75],
             &[0.8, 2.3, 0.9, 2.45],
@@ -185,7 +186,47 @@ fn build_preset(preset_id: u32, sample_rate: u32) -> Engine {
             1.8,
             0.006,
         ),
+        // 11: Ferrari flat-plane V8 (458 / F8) - even firing, short equal headers
+        11 => build_custom_engine(sr, &even(8), &[0.9, 0.95, 0.9, 0.95], 2.6, &[1.6, 2.1, 2.7, 1.3], 0.085, 2.0, 2.2, 0.36, 0.62, 0.05, 2.0, 0.003),
+        // 12: Porsche flat-6 NA (911 GT3 4.0)
+        12 => build_custom_engine(sr, &even(6), &[1.1, 1.25, 1.15, 1.3, 1.2, 1.05], 3.0, &[1.9, 2.6, 3.2, 1.5], 0.085, 2.1, 2.4, 0.40, 0.60, 0.05, 2.1, 0.003),
+        // 13: BMW inline-6 (M3 S54 / B58)
+        13 => build_custom_engine(sr, &even(6), &[1.4, 1.5, 1.45, 1.55, 1.5, 1.4], 3.4, &[2.2, 2.9, 3.6, 1.8], 0.09, 2.0, 2.5, 0.34, 0.60, 0.06, 1.7, 0.004),
+        // 14: Nissan GT-R VR38 twin-turbo V6
+        14 => build_custom_engine(sr, &even(6), &[1.9, 2.0, 1.95, 2.05, 2.0, 1.9], 3.8, &[2.6, 3.3, 4.1, 2.0], 0.10, 1.9, 2.6, 0.42, 0.55, 0.06, 2.6, 0.004),
+        // 15: Toyota Supra 2JZ-GTE inline-6 turbo
+        15 => build_custom_engine(sr, &even(6), &[1.6, 1.7, 1.65, 1.75, 1.7, 1.6], 4.0, &[2.8, 3.5, 4.3, 2.1], 0.095, 2.1, 2.6, 0.45, 0.58, 0.05, 2.8, 0.004),
+        // 16: Mazda RX-7 13B twin rotor (4 combustion events / 720deg, long burn, no pistons)
+        16 => build_custom_engine(sr, &even(4), &[0.55, 0.6, 0.55, 0.6], 2.2, &[1.2, 1.6, 2.0, 0.9], 0.16, 2.8, 1.2, 0.30, 0.70, 0.03, 2.0, 0.010),
+        // 17: Bugatti W16 quad-turbo
+        17 => build_custom_engine(sr, &even(16), &[1.3, 1.4, 1.35, 1.45], 3.6, &[2.4, 3.0, 3.8, 1.9], 0.08, 1.6, 1.8, 0.45, 0.55, 0.04, 3.0, 0.002),
+        // 18: 1990s F1 V12 (Ferrari 412T)
+        18 => build_custom_engine(sr, &even(12), &[0.6, 0.62, 0.61, 0.63, 0.6, 0.62], 1.8, &[1.0, 1.3, 1.6, 0.8], 0.07, 2.0, 1.8, 0.40, 0.62, 0.03, 2.4, 0.001),
+        // 19: 2006 F1 2.4L V8 (Cosworth CA2006)
+        19 => build_custom_engine(sr, &even(8), &[0.55, 0.57, 0.56, 0.58], 1.6, &[0.9, 1.2, 1.5, 0.7], 0.07, 2.1, 1.9, 0.40, 0.64, 0.03, 2.4, 0.001),
+        // 20: Harley-Davidson 45deg V-twin (potato-potato 315/405 firing)
+        20 => build_custom_engine(sr, &[0.0, 0.5625], &[2.6, 3.0], 5.5, &[3.6, 4.8, 2.4, 5.8], 0.13, 3.2, 3.6, 0.28, 0.70, 0.12, 1.4, 0.015),
+        // 21: Ducati 90deg L-twin (270/450 firing)
+        21 => build_custom_engine(sr, &[0.0, 0.375], &[1.2, 1.4], 3.0, &[2.0, 2.6, 1.5, 3.1], 0.10, 2.8, 3.0, 0.34, 0.66, 0.08, 1.8, 0.008),
+        // 22: Yamaha R1 crossplane inline-4 (270-180-90-180)
+        22 => build_custom_engine(sr, &[0.0, 0.375, 0.625, 0.75], &[0.8, 0.85, 0.82, 0.88], 2.4, &[1.4, 1.9, 2.3, 1.1], 0.08, 2.4, 2.4, 0.38, 0.62, 0.05, 2.0, 0.004),
+        // 23: Honda CBR flat-plane inline-4 screamer
+        23 => build_custom_engine(sr, &even(4), &[0.6, 0.62, 0.6, 0.62], 2.0, &[1.1, 1.5, 1.9, 0.9], 0.075, 2.2, 2.2, 0.40, 0.60, 0.04, 2.2, 0.003),
+        // 24: Single-cylinder thumper (KTM 690 / dirt bike)
+        24 => build_custom_engine(sr, &[0.0], &[1.8], 4.0, &[2.6, 3.4, 1.9, 4.2], 0.12, 3.4, 3.8, 0.30, 0.68, 0.12, 1.6, 0.012),
+        // 25: Diesel truck inline-6 (Cummins) - slow burn, long pipes
+        25 => build_custom_engine(sr, &even(6), &[3.0, 3.2, 3.1, 3.3, 3.2, 3.0], 7.0, &[4.5, 5.8, 7.2, 3.6], 0.20, 3.0, 3.8, 0.40, 0.55, 0.15, 3.2, 0.008),
+        // 26: Air-cooled flat-4 (classic VW Beetle / Porsche 356)
+        26 => build_custom_engine(sr, &even(4), &[1.6, 2.0, 1.6, 2.0], 3.6, &[2.4, 3.2, 1.8, 4.0], 0.12, 2.6, 3.2, 0.30, 0.64, 0.12, 1.4, 0.012),
+        // 27: NASCAR / race crossplane V8 - open long headers
+        27 => build_custom_engine(sr, &even(8), &[2.2, 3.0, 1.7, 3.2, 1.9, 2.9, 2.3, 3.1], 5.2, &[3.4, 4.8, 2.3, 5.6], 0.12, 2.6, 3.0, 0.30, 0.70, 0.10, 1.5, 0.010),
+        _ => load_ron_preset(PRESET_DEFAULT, sample_rate),
     }
+}
+
+/// Evenly spaced firing offsets across the 720deg 4-stroke cycle
+fn even(n: usize) -> Vec<f32> {
+    (0..n).map(|i| i as f32 / n as f32).collect()
 }
 
 #[no_mangle]

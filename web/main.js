@@ -1,116 +1,44 @@
 import { CLUSTERS, drawCluster } from './clusters.js';
 
+const PRESET_CATS = [
+  { id: 'all', label: '全部' },
+  { id: 'jdm', label: '日系 JDM' },
+  { id: 'street', label: '欧美街车' },
+  { id: 'super', label: '超跑' },
+  { id: 'race', label: '赛车' },
+  { id: 'moto', label: '摩托' },
+  { id: 'classic', label: '经典 / 其他' },
+];
+
 const PRESETS = [
-  {
-    id: 0,
-    name: '经典直列四缸 (I4)',
-    sub: '4 缸 · 均衡经典声浪',
-    cars: '代表车型：本田 Civic Type R / 高尔夫 GTI',
-    cyls: 4,
-    idle: 900,
-    redline: 7500,
-    maxRpm: 8500,
-  },
-  {
-    id: 7,
-    name: '美式十字曲轴 V8',
-    sub: '8 缸 · 浑厚低沉煮水声',
-    cars: '代表车型：福特 Mustang GT / 科尔维特 / 挑战者',
-    cyls: 8,
-    idle: 750,
-    redline: 6800,
-    maxRpm: 7500,
-  },
-  {
-    id: 8,
-    name: '高转自然吸气 V10',
-    sub: '10 缸 · 标志性高频尖啸',
-    cars: '代表车型：雷克萨斯 LFA / 保时捷 Carrera GT / Huracán',
-    cyls: 10,
-    idle: 1400,
-    redline: 13500,
-    maxRpm: 15000,
-  },
-  {
-    id: 9,
-    name: '自然吸气 V12 超跑',
-    sub: '12 缸 · 绵密高亢声浪',
-    cars: '代表车型：法拉利 812 / 兰博基尼 Aventador / 帕加尼 Zonda',
-    cyls: 12,
-    idle: 1050,
-    redline: 9200,
-    maxRpm: 10500,
-  },
-  {
-    id: 10,
-    name: '水平对置 Boxer-4',
-    sub: '4 缸 · 不等长芭蕉煮水',
-    cars: '代表车型：斯巴鲁 WRX STI / 丰田 86 / BRZ',
-    cyls: 4,
-    idle: 850,
-    redline: 7400,
-    maxRpm: 8200,
-  },
-  {
-    id: 1,
-    name: '赛用十缸 (V10 Race)',
-    sub: '10 缸 · 暴躁直通排气',
-    cars: '代表车型：奥迪 R8 V10 / 兰博基尼 Gallardo',
-    cyls: 10,
-    idle: 1100,
-    redline: 9000,
-    maxRpm: 10000,
-  },
-  {
-    id: 2,
-    name: '街道十缸 (V10 Street)',
-    sub: '10 缸 · 浑厚中低频',
-    cars: '代表车型：宝马 M5 (E60) / 道奇 Viper',
-    cyls: 10,
-    idle: 950,
-    redline: 8200,
-    maxRpm: 9200,
-  },
-  {
-    id: 3,
-    name: '性能直列三缸 (I3)',
-    sub: '3 缸 · 独特三缸节奏',
-    cars: '代表车型：丰田 GR Yaris / GR Corolla / 柯尼塞格 Gemera',
-    cyls: 3,
-    idle: 850,
-    redline: 7600,
-    maxRpm: 8500,
-  },
-  {
-    id: 4,
-    name: '高转轻量化四缸 (I4 NA)',
-    sub: '4 缸 · 轻快清脆高转',
-    cars: '代表车型：本田 S2000 / 马自达 MX-5 / 路特斯 Elise',
-    cyls: 4,
-    idle: 900,
-    redline: 8400,
-    maxRpm: 9200,
-  },
-  {
-    id: 5,
-    name: '经典直列五缸 (I5)',
-    sub: '5 缸 · “小 V10” 独特声浪',
-    cars: '代表车型：奥迪 RS3 / TT RS / 沃尔沃 850R',
-    cyls: 5,
-    idle: 850,
-    redline: 7800,
-    maxRpm: 8800,
-  },
-  {
-    id: 6,
-    name: '拉力性能四缸 (I4 Rally)',
-    sub: '4 缸 · 激进进排气响应',
-    cars: '代表车型：三菱 Lancer Evo IX / AMG A45',
-    cyls: 4,
-    idle: 900,
-    redline: 8000,
-    maxRpm: 9000,
-  },
+  { id: 0, cat: 'jdm', name: '经典直列四缸 (I4)', sub: '4 缸 · 均衡经典声浪', cars: '代表车型：本田 Civic Type R / 高尔夫 GTI', cyls: 4, idle: 900, redline: 7500, maxRpm: 8500 },
+  { id: 4, cat: 'jdm', name: '高转自吸四缸 (I4 NA)', sub: '4 缸 · 轻快清脆高转', cars: '代表车型：本田 S2000 / 马自达 MX-5 / 路特斯 Elise', cyls: 4, idle: 900, redline: 8400, maxRpm: 9200 },
+  { id: 15, cat: 'jdm', name: '2JZ 直列六缸涡轮', sub: '6 缸 · 丝滑顺畅 + 涡轮', cars: '代表车型：丰田 Supra MK4 (A80)', cyls: 6, idle: 800, redline: 7200, maxRpm: 8000 },
+  { id: 14, cat: 'jdm', name: 'VR38 双涡轮 V6', sub: '6 缸 · 低沉凶狠', cars: '代表车型：日产 GT-R (R35)', cyls: 6, idle: 850, redline: 7100, maxRpm: 8000 },
+  { id: 16, cat: 'jdm', name: '13B 双转子转子引擎', sub: '转子 · 标志性“Brap”声', cars: '代表车型：马自达 RX-7 (FD) / RX-8', cyls: 4, idle: 1000, redline: 9000, maxRpm: 10000 },
+  { id: 10, cat: 'jdm', name: '水平对置 Boxer-4', sub: '4 缸 · 不等长芭蕉煮水', cars: '代表车型：斯巴鲁 WRX STI / 丰田 86 / BRZ', cyls: 4, idle: 850, redline: 7400, maxRpm: 8200 },
+  { id: 6, cat: 'jdm', name: '拉力性能四缸 (I4 Rally)', sub: '4 缸 · 激进进排气响应', cars: '代表车型：三菱 Lancer Evo IX / AMG A45', cyls: 4, idle: 900, redline: 8000, maxRpm: 9000 },
+  { id: 3, cat: 'jdm', name: '性能直列三缸 (I3)', sub: '3 缸 · 独特三缸节奏', cars: '代表车型：丰田 GR Yaris / GR Corolla', cyls: 3, idle: 850, redline: 7600, maxRpm: 8500 },
+  { id: 7, cat: 'street', name: '美式十字曲轴 V8', sub: '8 缸 · 浑厚低沉煮水声', cars: '代表车型：福特 Mustang GT / 科尔维特 / 挑战者', cyls: 8, idle: 750, redline: 6800, maxRpm: 7500 },
+  { id: 13, cat: 'street', name: '宝马直列六缸 (I6)', sub: '6 缸 · 经典“丝绸六”', cars: '代表车型：宝马 M3 (E46) / M2 / Z4', cyls: 6, idle: 800, redline: 8000, maxRpm: 9000 },
+  { id: 5, cat: 'street', name: '经典直列五缸 (I5)', sub: '5 缸 · “小 V10” 独特声浪', cars: '代表车型：奥迪 RS3 / TT RS / 沃尔沃 850R', cyls: 5, idle: 850, redline: 7800, maxRpm: 8800 },
+  { id: 2, cat: 'street', name: '街道十缸 (V10 Street)', sub: '10 缸 · 浑厚中低频', cars: '代表车型：宝马 M5 (E60) / 道奇 Viper', cyls: 10, idle: 950, redline: 8200, maxRpm: 9200 },
+  { id: 11, cat: 'super', name: '平面曲轴 V8', sub: '8 缸 · 高亢嘶吼', cars: '代表车型：法拉利 458 / F8 / 迈凯伦 720S', cyls: 8, idle: 1000, redline: 9000, maxRpm: 10000 },
+  { id: 12, cat: 'super', name: '自吸水平对置六缸', sub: '6 缸 · 9000 转机械交响', cars: '代表车型：保时捷 911 GT3 / GT3 RS', cyls: 6, idle: 900, redline: 9000, maxRpm: 10000 },
+  { id: 8, cat: 'super', name: '高转自然吸气 V10', sub: '10 缸 · 标志性高频尖啸', cars: '代表车型：雷克萨斯 LFA / 保时捷 Carrera GT', cyls: 10, idle: 1400, redline: 9000, maxRpm: 10000 },
+  { id: 1, cat: 'super', name: '赛用十缸 (V10 Race)', sub: '10 缸 · 暴躁直通排气', cars: '代表车型：奥迪 R8 V10 / 兰博基尼 Huracán', cyls: 10, idle: 1100, redline: 9000, maxRpm: 10000 },
+  { id: 9, cat: 'super', name: '自然吸气 V12 超跑', sub: '12 缸 · 绵密高亢声浪', cars: '代表车型：法拉利 812 / 兰博基尼 Aventador / 帕加尼 Zonda', cyls: 12, idle: 1050, redline: 9200, maxRpm: 10500 },
+  { id: 17, cat: 'super', name: 'W16 四涡轮', sub: '16 缸 · 低沉怪兽级', cars: '代表车型：布加迪 Veyron / Chiron', cyls: 16, idle: 900, redline: 6800, maxRpm: 7500 },
+  { id: 18, cat: 'race', name: '90 年代 F1 V12', sub: '12 缸 · 17000 转天籁', cars: '代表车型：法拉利 412T / 641 F1', cyls: 12, idle: 3000, redline: 17000, maxRpm: 18000 },
+  { id: 19, cat: 'race', name: '2006 F1 V8', sub: '8 缸 · 18000 转尖啸', cars: '代表车型：Cosworth CA2006 / 法拉利 248 F1', cyls: 8, idle: 4000, redline: 17500, maxRpm: 18000 },
+  { id: 27, cat: 'race', name: 'NASCAR 赛道 V8', sub: '8 缸 · 开放直排轰鸣', cars: '代表车型：NASCAR Cup / 谢尔比 Cobra 427', cyls: 8, idle: 1100, redline: 9500, maxRpm: 10500 },
+  { id: 22, cat: 'moto', name: '十字曲轴直列四缸', sub: '4 缸 · 类 V4 低吼', cars: '代表车型：雅马哈 YZF-R1 / MT-10', cyls: 4, idle: 1300, redline: 14000, maxRpm: 15000 },
+  { id: 23, cat: 'moto', name: '高转直列四缸', sub: '4 缸 · 14000 转尖啸', cars: '代表车型：本田 CBR1000RR / 川崎 ZX-10R', cyls: 4, idle: 1300, redline: 14500, maxRpm: 16000 },
+  { id: 21, cat: 'moto', name: '90° L 型双缸', sub: '2 缸 · 意式暴躁', cars: '代表车型：杜卡迪 Panigale 959 / Monster', cyls: 2, idle: 1200, redline: 11000, maxRpm: 12000 },
+  { id: 20, cat: 'moto', name: '45° V 型双缸', sub: '2 缸 · “土豆土豆”节奏', cars: '代表车型：哈雷 Fat Boy / Street Glide', cyls: 2, idle: 800, redline: 5500, maxRpm: 6500 },
+  { id: 24, cat: 'moto', name: '大单缸', sub: '1 缸 · 越野“突突”声', cars: '代表车型：KTM 690 / 本田 XR650', cyls: 1, idle: 1500, redline: 9000, maxRpm: 10000 },
+  { id: 26, cat: 'classic', name: '风冷水平对置四缸', sub: '4 缸 · 复古“哒哒”声', cars: '代表车型：大众甲壳虫 / 保时捷 356', cyls: 4, idle: 850, redline: 4800, maxRpm: 5500 },
+  { id: 25, cat: 'classic', name: '柴油直列六缸卡车', sub: '6 缸 · 低转重扭 + 涡轮', cars: '代表车型：道奇 Ram Cummins / 重卡', cyls: 6, idle: 650, redline: 3200, maxRpm: 4000 },
 ];
 
 const GEAR_RATIOS = [0, 3.4, 2.35, 1.72, 1.32, 1.05, 0.85]; // index 0 = Neutral
@@ -176,6 +104,8 @@ const manualRpmRow = document.getElementById('manualRpmRow');
 const manualRpmSlider = document.getElementById('manualRpmSlider');
 const manualRpmVal = document.getElementById('manualRpmVal');
 const presetGrid = document.getElementById('presetGrid');
+const presetTabs = document.getElementById('presetTabs');
+let activePresetCat = 'all';
 const activeEngineMeta = document.getElementById('activeEngineMeta');
 
 const volSlider = document.getElementById('volSlider');
@@ -263,8 +193,22 @@ renderClusterPills();
 
 // Render preset buttons
 function renderPresets() {
+  presetTabs.innerHTML = '';
+  for (const c of PRESET_CATS) {
+    const count = c.id === 'all' ? PRESETS.length : PRESETS.filter((p) => p.cat === c.id).length;
+    const tab = document.createElement('button');
+    tab.className = 'preset-tab' + (c.id === activePresetCat ? ' active' : '');
+    tab.textContent = `${c.label} ${count}`;
+    tab.onclick = () => {
+      activePresetCat = c.id;
+      renderPresets();
+    };
+    presetTabs.appendChild(tab);
+  }
+
   presetGrid.innerHTML = '';
-  for (const p of PRESETS) {
+  const list = activePresetCat === 'all' ? PRESETS : PRESETS.filter((p) => p.cat === activePresetCat);
+  for (const p of list) {
     const btn = document.createElement('button');
     btn.className = 'preset-card' + (p.id === activePreset.id ? ' active' : '');
     btn.innerHTML = `<div class="title">${p.name}</div><div class="sub">${p.sub}</div><div class="cars">${p.cars}</div>`;
