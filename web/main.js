@@ -118,9 +118,28 @@ const GEAR_RATIOS = [0, 3.4, 2.35, 1.72, 1.32, 1.05, 0.85]; // index 0 = Neutral
 // Audio state
 let audioCtx = null;
 let workletNode = null;
+let scriptNode = null;
+let localWasm = null;
+let localMemory = null;
+let localOutPtr = 0;
+let localPower = false;
 let analyser = null;
 let isRunning = false;
 let wasmReady = false;
+
+// Pre-fetch Wasm binary on page load so clicking START unlocks Safari audio immediately without network delay
+const wasmBytesPromise = fetch('engine_dsp.wasm')
+  .then((res) => {
+    if (!res.ok) throw new Error(`无法加载 engine_dsp.wasm (${res.status})`);
+    return res.arrayBuffer();
+  })
+  .catch((err) => {
+    console.error('Pre-fetch engine_dsp.wasm failed:', err);
+    return null;
+  });
+
+const IS_SAFARI =
+  /Safari/i.test(navigator.userAgent) && !/Chrome|Chromium|Edg|CriOS|FxiOS/i.test(navigator.userAgent);
 
 // Simulation state
 let activePreset = PRESETS[0];
@@ -252,67 +271,182 @@ function renderPresets() {
   manualRpmSlider.max = activePreset.maxRpm;
 }
 
+function sendAudioMsg(msg) {
+  if (!wasmReady) return;
+  if (workletNode) {
+    workletNode.port.postMessage(msg);
+    return;
+  }
+  if (!localWasm) return;
+  switch (msg.type) {
+    case 'preset':
+      localWasm.engine_load_preset(msg.id >>> 0);
+      break;
+    case 'rpm':
+      localWasm.engine_set_rpm(msg.value);
+      break;
+    case 'throttle':
+      localWasm.engine_set_throttle(msg.value);
+      break;
+    case 'volume':
+      localWasm.engine_set_volume(msg.value);
+      break;
+    case 'mix':
+      localWasm.engine_set_mix(msg.intake, msg.exhaust, msg.vib);
+      break;
+    case 'valve':
+      localWasm.engine_set_valve_timing(msg.intakeShift, msg.exhaustShift);
+      break;
+    case 'power':
+      localPower = Boolean(msg.on);
+      break;
+  }
+}
+
 function selectPreset(preset) {
   activePreset = preset;
   rpm = Math.max(preset.idle, Math.min(rpm, preset.redline));
   renderPresets();
-  if (workletNode && wasmReady) {
-    workletNode.port.postMessage({ type: 'preset', id: preset.id });
+  if (wasmReady) {
+    sendAudioMsg({ type: 'preset', id: preset.id });
     syncTuning();
   }
 }
 
-async function initAudio() {
-  if (audioCtx) return;
-  // Create and unlock AudioContext synchronously inside user gesture (required by iOS Safari)
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  audioCtx.resume().catch(() => {});
-  await audioCtx.audioWorklet.addModule('engine-worklet.js');
+function unlockSafariAudio(ctx) {
+  // Allow Web Audio even when iPhone physical Silent Switch is ON (iOS 17+ Safari)
+  try {
+    if (navigator.audioSession) {
+      navigator.audioSession.type = 'playback';
+    }
+  } catch (_) {}
 
-  workletNode = new AudioWorkletNode(audioCtx, 'engine-worklet-processor', {
-    numberOfInputs: 0,
-    numberOfOutputs: 1,
-    outputChannelCount: [2],
-  });
+  // Play a 1-sample silent buffer synchronously inside user gesture to unlock Safari
+  try {
+    const buf = ctx.createBuffer(1, 1, ctx.sampleRate || 44100);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch (_) {}
+
+  ctx.resume().catch(() => {});
+}
+
+async function initScriptProcessorFallback(wasmBytes) {
+  const { instance } = await WebAssembly.instantiate(wasmBytes.slice(0), {});
+  localWasm = instance.exports;
+  localMemory = instance.exports.memory;
+  localWasm.engine_init(audioCtx.sampleRate);
+  localOutPtr = localWasm.engine_get_output_ptr();
+  localPower = true;
+
+  // 1024 samples (~21ms @ 48kHz), processed in 512-sample chunks matching Wasm MAX_FRAMES
+  scriptNode = audioCtx.createScriptProcessor(1024, 0, 2);
+  scriptNode.onaudioprocess = (e) => {
+    const outL = e.outputBuffer.getChannelData(0);
+    const outR = e.outputBuffer.getChannelData(1);
+    const total = outL.length;
+
+    if (!localWasm || !localPower) {
+      outL.fill(0);
+      outR.fill(0);
+      return;
+    }
+
+    let offset = 0;
+    while (offset < total) {
+      const chunk = Math.min(512, total - offset);
+      localWasm.engine_process(chunk);
+      const pcm = new Float32Array(localMemory.buffer, localOutPtr, chunk);
+      outL.set(pcm, offset);
+      outR.set(pcm, offset);
+      offset += chunk;
+    }
+  };
+
+  scriptNode.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  wasmReady = true;
+}
+
+async function initAudio() {
+  if (audioCtx && wasmReady) return;
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  unlockSafariAudio(audioCtx);
 
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 1024;
 
-  workletNode.connect(analyser);
-  analyser.connect(audioCtx.destination);
-
-  const wasmRes = await fetch('engine_dsp.wasm');
-  if (!wasmRes.ok) {
-    throw new Error(`无法加载 engine_dsp.wasm (${wasmRes.status})，请先运行 ./build.sh`);
+  let wasmBytes = await wasmBytesPromise;
+  if (!wasmBytes) {
+    const wasmRes = await fetch('engine_dsp.wasm');
+    if (!wasmRes.ok) {
+      throw new Error(`无法加载 engine_dsp.wasm (${wasmRes.status})，请先运行 ./build.sh`);
+    }
+    wasmBytes = await wasmRes.arrayBuffer();
   }
-  const wasmBytes = await wasmRes.arrayBuffer();
 
-  await new Promise((resolve, reject) => {
-    workletNode.port.onmessage = (e) => {
-      if (e.data.type === 'ready') {
-        wasmReady = true;
-        resolve();
-      } else if (e.data.type === 'error') {
-        reject(new Error(e.data.message));
+  // Safari (iOS & macOS) has known AudioWorklet + Wasm silent-output bugs;
+  // use rock-solid main-thread Wasm + ScriptProcessorNode on Safari, and AudioWorklet elsewhere
+  const canUseWorklet = Boolean(audioCtx.audioWorklet) && !IS_SAFARI;
+
+  if (canUseWorklet) {
+    try {
+      await audioCtx.audioWorklet.addModule('engine-worklet.js');
+      workletNode = new AudioWorkletNode(audioCtx, 'engine-worklet-processor', {
+        numberOfInputs: 0,
+        numberOfOutputs: 1,
+        outputChannelCount: [2],
+      });
+      workletNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      const copy = wasmBytes.slice(0);
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('AudioWorklet init timeout')), 2000);
+        workletNode.port.onmessage = (e) => {
+          if (e.data.type === 'ready') {
+            clearTimeout(timer);
+            wasmReady = true;
+            resolve();
+          } else if (e.data.type === 'error') {
+            clearTimeout(timer);
+            reject(new Error(e.data.message));
+          }
+        };
+        workletNode.port.postMessage({ type: 'init', wasmBytes: copy }, [copy]);
+      });
+    } catch (err) {
+      console.warn('AudioWorklet unavailable, falling back to ScriptProcessor:', err);
+      if (workletNode) {
+        try {
+          workletNode.disconnect();
+        } catch (_) {}
+        workletNode = null;
       }
-    };
-    workletNode.port.postMessage({ type: 'init', wasmBytes }, [wasmBytes]);
-  });
+      await initScriptProcessorFallback(wasmBytes);
+    }
+  } else {
+    await initScriptProcessorFallback(wasmBytes);
+  }
 
-  workletNode.port.postMessage({ type: 'preset', id: activePreset.id });
+  sendAudioMsg({ type: 'preset', id: activePreset.id });
   syncTuning();
 }
 
 function syncTuning() {
-  if (!workletNode || !wasmReady) return;
-  workletNode.port.postMessage({ type: 'volume', value: parseFloat(volSlider.value) });
-  workletNode.port.postMessage({
+  if (!wasmReady) return;
+  sendAudioMsg({ type: 'volume', value: parseFloat(volSlider.value) });
+  sendAudioMsg({
     type: 'mix',
     intake: parseFloat(intakeSlider.value),
     exhaust: parseFloat(exhaustSlider.value),
     vib: parseFloat(vibSlider.value),
   });
-  workletNode.port.postMessage({
+  sendAudioMsg({
     type: 'valve',
     intakeShift: parseFloat(inValveSlider.value),
     exhaustShift: parseFloat(exValveSlider.value),
@@ -322,6 +456,12 @@ function syncTuning() {
 ignitionBtn.onclick = async () => {
   try {
     if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // Always unlock synchronously inside the click handler for Safari
+    unlockSafariAudio(audioCtx);
+
+    if (!wasmReady) {
       ignitionText.textContent = '加载 Wasm 中...';
       await initAudio();
     }
@@ -329,13 +469,13 @@ ignitionBtn.onclick = async () => {
       await audioCtx.resume();
       isRunning = true;
       rpm = activePreset.idle;
-      workletNode.port.postMessage({ type: 'power', on: true });
+      sendAudioMsg({ type: 'power', on: true });
       ignitionBtn.classList.add('running');
       statusDot.classList.add('active');
       ignitionText.textContent = '熄火 (STOP)';
     } else {
       isRunning = false;
-      workletNode.port.postMessage({ type: 'power', on: false });
+      sendAudioMsg({ type: 'power', on: false });
       ignitionBtn.classList.remove('running');
       statusDot.classList.remove('active');
       ignitionText.textContent = '启动引擎 (START)';
@@ -493,9 +633,9 @@ function stepPhysics(dt) {
 
   if (manualRpmMode) {
     rpm = parseFloat(manualRpmSlider.value);
-    if (workletNode && wasmReady) {
-      workletNode.port.postMessage({ type: 'rpm', value: rpm });
-      workletNode.port.postMessage({ type: 'throttle', value: 0.65 });
+    if (wasmReady) {
+      sendAudioMsg({ type: 'rpm', value: rpm });
+      sendAudioMsg({ type: 'throttle', value: 0.65 });
     }
     return;
   }
@@ -529,9 +669,9 @@ function stepPhysics(dt) {
     }
   }
 
-  if (workletNode && wasmReady) {
-    workletNode.port.postMessage({ type: 'rpm', value: Math.max(500, rpm) });
-    workletNode.port.postMessage({
+  if (wasmReady) {
+    sendAudioMsg({ type: 'rpm', value: Math.max(500, rpm) });
+    sendAudioMsg({
       type: 'throttle',
       value: throttlePressed && !limiterCut ? 1.0 : 0.08,
     });
