@@ -1,0 +1,31 @@
+# Engine Sound Lab
+
+> Free browser-based real-time physical car & motorcycle engine sound synthesizer (Rust → WebAssembly + Web Audio) with 28 engine presets and 38 interactive classic & modern sports car instrument clusters.
+
+- Live Demo: https://senwong.github.io/engine-sound-web/
+- Source Code: https://github.com/senwong/engine-sound-web
+- License: MIT (DSP core adapted from DasEtwas/enginesound)
+
+## What It Does
+Engine Sound Lab synthesizes internal combustion engine acoustics in real time directly in the browser—using physical intake/exhaust waveguides, cylinder firing orders, and muffler resonance compiled from Rust to WebAssembly (`engine_dsp.wasm`, ~227 KB). No pre-recorded audio loops are required. Users can rev the throttle, shift gears (manual or auto-shift), bounce off the rev limiter, tune intake/exhaust/vibration mix and valve timing, and switch between 38 Retina-rendered sports car tachometers on both desktop and mobile.
+
+## 28 Engine Presets
+- **JDM**: Inline-4 (Civic Type R / Golf GTI), High-Rev I4 NA (Honda S2000 / MX-5), 2JZ-GTE Inline-6 Turbo (Supra MK4), VR38DETT Twin-Turbo V6 (GT-R R35), 13B Twin-Rotor Rotary (Mazda RX-7 FD), Unequal-Length Boxer-4 (Subaru WRX STI / 86), Rally I4 (Evo IX / AMG A45), Performance I3 (GR Yaris).
+- **EU / US Street**: Crossplane V8 (Mustang GT / Corvette), BMW Inline-6 (M3 E46 / M2), Inline-5 (Audi RS3 / TT RS), Street V10 (BMW M5 E60 / Dodge Viper).
+- **Supercars**: Flat-Plane V8 (Ferrari 458 / F8 / McLaren 720S), NA Flat-6 (Porsche 911 GT3 / GT3 RS), High-Rev NA V10 (Lexus LFA / Carrera GT), Race V10 (Audi R8 V10 / Huracán), NA V12 (Ferrari 812 / Aventador / Pagani Zonda), Quad-Turbo W16 (Bugatti Chiron).
+- **Race**: 1990s F1 V12 (17,000 RPM), 2006 F1 V8 (18,000 RPM), NASCAR Race V8.
+- **Motorcycles**: Crossplane I4 (Yamaha R1), High-Rev I4 (Honda CBR1000RR), 90° L-Twin (Ducati Panigale), 45° V-Twin (Harley-Davidson), Single-Cylinder Thumper (KTM 690).
+- **Classic & Others**: Air-Cooled Flat-4 (VW Beetle / Porsche 356), Inline-6 Diesel Truck (Cummins).
+
+## 38 Interactive Sports Car Instrument Clusters
+- **Porsche**: 911 GT3 (992.1), 911 Classic Green Heritage (S/T), 911 GT3 RS Racing Yellow, 918 Spyder Acid Green, 930 Turbo (1975), 992.2 Full Digital.
+- **Ferrari**: 458 / 812 Giallo Modena Yellow, 488 Pista Rosso Corsa Red, F40 Veglia Black/Orange, Testarossa (1984), SF90 Digital.
+- **Lamborghini**: Aventador Fighter-Jet TFT, Huracán CORSA Bargraph, Countach Classic, Miura (1966), Revuelto Digital.
+- **Classic Sports Cars**: Mercedes-Benz 300SL Gullwing, Jaguar E-Type, Aston Martin DB5, Shelby Cobra 427, Ford GT40 Gulf, BMW E30 M3.
+- **Modern Sports Cars**: Audi R8 Virtual Cockpit, Mercedes-AMG GT, BMW M4 Digital, Corvette C8, McLaren 720S, Ford GT (2017), Koenigsegg Jesko.
+- **Hypercars & JDM**: Lexus LFA, McLaren P1 Folding Track Display, Pagani Huayra Horology Dial, Bugatti Chiron French Blue, Nissan GT-R R34 Nismo White, Toyota Supra MK4, Honda NSX NA1, Mazda RX-7 FD, Honda S2000 AP1 Digital.
+
+## Technical Stack
+- **DSP Core**: Rust (`engine-wasm`) compiled to `wasm32-unknown-unknown` with zero OS dependencies.
+- **Audio Runtime**: Web Audio `AudioWorklet` on Chromium/Firefox, automatic `ScriptProcessorNode` + `navigator.audioSession` playback fallback on iOS WebKit & macOS Safari.
+- **UI**: Vanilla ES Modules + HiDPI Canvas 2D + mobile sticky driving dock + automated SHA-256 content hashing (`scripts/stamp-assets.mjs`).

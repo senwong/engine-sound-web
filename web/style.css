@@ -576,8 +576,51 @@ input[type="range"]::-moz-range-thumb {
   color: var(--muted);
 }
 
+.footer a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
 .footer code {
   color: var(--cyan);
+}
+
+.seo-about {
+  margin: 12px auto 0;
+  max-width: 860px;
+  text-align: left;
+  background: rgba(20, 24, 33, 0.7);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.seo-about summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+  list-style: none;
+}
+
+.seo-about summary::-webkit-details-marker {
+  display: none;
+}
+
+.seo-about .seo-body {
+  margin-top: 10px;
+  line-height: 1.65;
+  color: #9aa4b8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seo-about strong {
+  color: var(--text);
 }
 
 /* Mobile Responsive Cockpit Design */

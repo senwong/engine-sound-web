@@ -5,8 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0b0d12" />
-  <title>Engine Sound Lab — 实时物理引擎声浪合成器 (Rust + Wasm)</title>
-  <link rel="stylesheet" href="style.css?v=0c5e2453" />
+  <title>Engine Sound Lab — 在线实时物理引擎声浪模拟器 & 38款经典跑车仪表盘 (V8/V10/V12/转子/F1)</title>
+  <meta name="description" content="免费在线实时物理引擎声浪合成器（Rust + WebAssembly + Web Audio），无需录音文件即可试听 28 种引擎声浪（V8/V10/V12/13B转子/Boxer/F1/摩托）并切换 38 款保时捷、法拉利、兰博基尼、LFA、GT-R 经典与现代跑车仪表盘。" />
+  <meta name="keywords" content="引擎声浪模拟器,汽车声浪在线听,engine sound simulator,跑车仪表盘,保时捷911 GT3仪表,法拉利仪表盘,兰博基尼仪表,V8声浪,V10声浪,V12声浪,13B转子引擎,WebAssembly,Web Audio" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://senwong.github.io/engine-sound-web/" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://senwong.github.io/engine-sound-web/" />
+  <meta property="og:title" content="Engine Sound Lab — 在线实时物理引擎声浪 & 38款经典跑车仪表盘" />
+  <meta property="og:description" content="纯浏览器 Rust + WebAssembly 物理实时合成 28 种引擎声浪（V8/V10/V12/转子/F1/摩托），支持 38 款保时捷/法拉利/兰博基尼/JDM 仪表盘，电脑与手机即开即玩。" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="Engine Sound Lab" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Engine Sound Lab — Real-Time Car Engine Sound & 38 Sports Car Clusters" />
+  <meta name="twitter:description" content="Browser-based Rust + WebAssembly physical engine sound synthesizer with 28 engine presets (V8/V10/V12/Rotary/F1) and 38 interactive Porsche, Ferrari, Lamborghini & JDM tachometers." />
+
+  <!-- Structured Data (JSON-LD) for Search Engines & AI -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Engine Sound Lab",
+    "alternateName": "在线实时物理引擎声浪与跑车仪表盘模拟器",
+    "url": "https://senwong.github.io/engine-sound-web/",
+    "codeRepository": "https://github.com/senwong/engine-sound-web",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Web, iOS, Android, macOS, Windows",
+    "browserRequirements": "Requires WebAssembly and Web Audio API",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Free real-time physical internal combustion engine sound synthesizer (Rust to WebAssembly) with 28 engine presets (I4, Boxer, 2JZ, 13B Rotary, Crossplane/Flat-plane V8, V10, V12, W16, F1, Motorcycles) and 38 interactive classic and modern sports car instrument clusters (Porsche, Ferrari, Lamborghini, Lexus LFA, McLaren, Pagani, Bugatti, GT-R, S2000).",
+    "featureList": [
+      "Real-time physical waveguide engine sound synthesis via Rust + WebAssembly",
+      "28 engine presets across JDM, EU/US street, supercars, F1 race cars, and motorcycles",
+      "38 Retina-rendered classic and modern sports car tachometers",
+      "Interactive throttle pedal, 6-speed shifting, rev limiter, and live acoustic tuning"
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="style.css?v=72e3b65f" />
 </head>
 <body>
   <div class="app">
@@ -120,7 +166,19 @@
     </main>
 
     <footer class="footer">
-      DSP 核心基于开源项目 <code>DasEtwas/enginesound</code> (MIT) 拆解编译为 WebAssembly · 纯浏览器本地实时物理合成，无需音频文件
+      <p>
+        DSP 核心基于开源项目 <a href="https://github.com/DasEtwas/enginesound" target="_blank" rel="noopener"><code>DasEtwas/enginesound</code></a> (MIT) 拆解编译为 WebAssembly ·
+        <a href="https://github.com/senwong/engine-sound-web" target="_blank" rel="noopener">GitHub 源码</a> ·
+        <a href="llms.txt">llms.txt</a>
+      </p>
+      <details class="seo-about">
+        <summary>关于 Engine Sound Lab：支持的 28 种引擎声浪与 38 款经典跑车仪表盘清单</summary>
+        <div class="seo-body">
+          <p><strong>Engine Sound Lab</strong> 是一款完全运行在浏览器中的免费实时物理引擎声浪合成器（Rust → WebAssembly + Web Audio API），无需任何音频录音文件，实时模拟气缸点火顺序、活塞运动与进排气声波导管共振。</p>
+          <p><strong>28 种引擎声浪预设：</strong>日系 JDM（本田 Civic Type R 直四、S2000 高转自吸、丰田 Supra 2JZ-GTE 直六涡轮、日产 GT-R VR38 双涡轮 V6、马自达 RX-7 13B 双转子、斯巴鲁 WRX STI 水平对置四缸、三菱 Evo IX、GR Yaris 三缸）、欧美街车与超跑（美式十字曲轴 V8、法拉利 458 平面曲轴 V8、保时捷 911 GT3 水平对置六缸、宝马直列六缸、奥迪 RS3 直列五缸、雷克萨斯 LFA / Carrera GT 高转 V10、法拉利 812 / 兰博基尼 Aventador 自吸 V12、布加迪 W16）、F1 赛车（90 年代 F1 V12、2006 F1 V8、NASCAR V8）、经典摩托车（雅马哈 R1、本田 CBR、杜卡迪 90° L-Twin、哈雷 45° V-Twin、KTM 大单缸）以及风冷甲壳虫与重卡柴油直六。</p>
+          <p><strong>38 款跑车仪表盘：</strong>涵盖保时捷（911 GT3 钛灰、911 S/T 经典绿字、GT3 RS 竞速黄、918 Spyder 酸绿、930 Turbo、992.2 全液晶）、法拉利（458/812 经典黄底、488 Pista 赛道红、F40 复古黑橙、Testarossa、SF90）、兰博基尼（Aventador 战斗机、Huracán CORSA、Countach、Miura、Revuelto）、经典跑车（奔驰 300SL 鸥翼、捷豹 E-Type、阿斯顿·马丁 DB5、谢尔比 Cobra 427、福特 GT40、宝马 E30 M3）与现代超跑/JDM（雷克萨斯 LFA、迈凯伦 P1/720S、帕加尼 Huayra、布加迪 Chiron、奥迪 R8、AMG GT、宝马 M4、科尔维特 C8、福特 GT、柯尼塞格 Jesko、GT-R R34 Nismo、Supra MK4、NSX NA1、RX-7 FD、本田 S2000）。</p>
+        </div>
+      </details>
     </footer>
   </div>
 
