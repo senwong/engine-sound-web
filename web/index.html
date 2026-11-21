@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Engine Sound Lab — 实时物理引擎声浪合成器 (Rust + Wasm)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot" id="statusDot"></span>
+        <h1>ENGINE SOUND LAB</h1>
+        <span class="badge">Rust → Wasm · AudioWorklet</span>
+      </div>
+      <div class="top-actions">
+        <button id="ignitionBtn" class="btn-ignition">
+          <span class="power-icon">⏻</span>
+          <span id="ignitionText">启动引擎 (START)</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- Left: Tachometer + Waveform + Pedal -->
+      <section class="panel cluster-panel">
+        <div class="cluster-bar">
+          <div class="brand-tabs" id="brandTabs">
+            <button class="brand-tab active" data-brand="all">全部 (16)</button>
+            <button class="brand-tab" data-brand="porsche">保时捷</button>
+            <button class="brand-tab" data-brand="ferrari">法拉利</button>
+            <button class="brand-tab" data-brand="lambo">兰博基尼</button>
+            <button class="brand-tab" data-brand="other">超跑 / JDM</button>
+          </div>
+          <div class="cluster-nav">
+            <button id="prevClusterBtn" class="btn-mini" title="上一个表盘 ([)">‹</button>
+            <span id="activeClusterLabel" class="cluster-label">911 GT3 (钛灰)</span>
+            <button id="nextClusterBtn" class="btn-mini" title="下一个表盘 (])">›</button>
+          </div>
+        </div>
+
+        <div class="cluster-switcher" id="clusterSwitcher"></div>
+
+        <div class="tach-wrapper">
+          <canvas id="tachCanvas" width="420" height="340"></canvas>
+        </div>
+
+        <canvas id="waveCanvas" width="420" height="72" class="wave-canvas"></canvas>
+
+        <div class="controls-row">
+          <button id="shiftDownBtn" class="btn-shift" title="快捷键 Q / ↓">− 降档 (Q)</button>
+          <button id="throttleBtn" class="btn-throttle" title="按住鼠标或空格 / W 键踩油门">
+            踩下油门 (按住 / Space / W)
+          </button>
+          <button id="shiftUpBtn" class="btn-shift" title="快捷键 E / ↑">+ 升档 (E)</button>
+        </div>
+
+        <div class="mode-bar">
+          <label class="toggle">
+            <input type="checkbox" id="manualRpmToggle" />
+            <span>手动锁定转速模式</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="autoShiftToggle" checked />
+            <span>自动升档</span>
+          </label>
+        </div>
+
+        <div class="manual-rpm-row" id="manualRpmRow" style="opacity: 0.45; pointer-events: none;">
+          <label>手动转速 <strong id="manualRpmVal">2000 RPM</strong></label>
+          <input type="range" id="manualRpmSlider" min="600" max="12000" step="10" value="2000" />
+        </div>
+      </section>
+
+      <!-- Right: Engine Presets + Live Acoustic Tuning -->
+      <section class="panel right-panel">
+        <div class="section-head">
+          <h2>选择引擎预设</h2>
+          <span class="hint" id="activeEngineMeta">8 缸 · 红线 8000 RPM</span>
+        </div>
+        <div class="preset-grid" id="presetGrid"></div>
+
+        <div class="section-head" style="margin-top: 20px;">
+          <h2>实时声学调校</h2>
+          <button id="resetMixBtn" class="btn-link">重置</button>
+        </div>
+
+        <div class="sliders">
+          <div class="slider-item">
+            <label>主音量 <span id="volVal">16%</span></label>
+            <input type="range" id="volSlider" min="0" max="0.45" step="0.01" value="0.16" />
+          </div>
+          <div class="slider-item">
+            <label>进气声浪 (Intake) <span id="intakeVal">1.00×</span></label>
+            <input type="range" id="intakeSlider" min="0" max="2.2" step="0.05" value="1.0" />
+          </div>
+          <div class="slider-item">
+            <label>排气声浪 (Exhaust) <span id="exhaustVal">1.00×</span></label>
+            <input type="range" id="exhaustSlider" min="0" max="2.2" step="0.05" value="1.0" />
+          </div>
+          <div class="slider-item">
+            <label>缸体震动 (Vibration) <span id="vibVal">1.00×</span></label>
+            <input type="range" id="vibSlider" min="0" max="2.2" step="0.05" value="1.0" />
+          </div>
+          <div class="slider-item">
+            <label>进气门正时偏移 <span id="inValveVal">0.00</span></label>
+            <input type="range" id="inValveSlider" min="-0.4" max="0.4" step="0.01" value="0" />
+          </div>
+          <div class="slider-item">
+            <label>排气门正时偏移 <span id="exValveVal">0.00</span></label>
+            <input type="range" id="exValveSlider" min="-0.4" max="0.4" step="0.01" value="0" />
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      DSP 核心基于开源项目 <code>DasEtwas/enginesound</code> (MIT) 拆解编译为 WebAssembly · 纯浏览器本地实时物理合成，无需音频文件
+    </footer>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

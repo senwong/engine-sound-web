@@ -1,0 +1,20 @@
+[package]
+name = "engine-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WebAssembly DSP core for procedural engine sound synthesis (adapted from DasEtwas/enginesound, MIT)"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+ron = "0.6.4"
+rand_core = "0.6.2"
+rand_xorshift = "0.3.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
