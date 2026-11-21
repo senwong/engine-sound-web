@@ -263,8 +263,13 @@ body {
 
 .btn-shift,
 .btn-throttle {
-  padding: 13px 10px;
-  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 10px;
+  border-radius: 12px;
   border: 1px solid var(--panel-border);
   background: #1c2230;
   color: var(--text);
@@ -276,6 +281,22 @@ body {
   -webkit-touch-callout: none;
   touch-action: manipulation;
   transition: all 0.1s;
+}
+
+.btn-main {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.btn-key {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.btn-throttle.pressed .btn-key {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .btn-throttle {
@@ -441,10 +462,10 @@ input[type="range"] {
   color: var(--cyan);
 }
 
-/* Mobile Responsive Optimizations */
-@media (max-width: 600px) {
+/* Mobile Responsive Cockpit Design */
+@media (max-width: 768px) {
   .app {
-    padding: 12px 12px 28px;
+    padding: 12px 12px calc(108px + env(safe-area-inset-bottom, 0px));
   }
 
   .topbar {
@@ -461,53 +482,177 @@ input[type="range"] {
     display: none;
   }
 
-  .btn-ignition {
-    padding: 9px 16px;
-    font-size: 13px;
-    width: 100%;
-    justify-content: center;
-  }
-
   .top-actions {
     width: 100%;
   }
 
-  .panel {
-    padding: 14px 12px;
+  .btn-ignition {
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 18px;
+    font-size: 15px;
+    justify-content: center;
     border-radius: 14px;
   }
 
-  .controls-row {
-    grid-template-columns: 1fr 2fr 1fr;
+  .panel {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  /* Bigger tap targets for cluster switcher on mobile */
+  .brand-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .brand-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .brand-tab {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .cluster-nav {
+    padding: 6px 8px;
+    border-radius: 12px;
+  }
+
+  .cluster-label {
+    font-size: 14px;
+  }
+
+  .btn-mini {
+    width: 42px;
+    height: 38px;
+    font-size: 22px;
+    border-radius: 10px;
+  }
+
+  .cluster-switcher {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    max-height: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     gap: 8px;
+    padding: 4px 0 6px;
   }
 
-  .btn-shift,
-  .btn-throttle {
-    min-height: 52px;
-    font-size: 12.5px;
-    padding: 10px 6px;
+  .cluster-switcher::-webkit-scrollbar {
+    display: none;
   }
 
-  .preset-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .preset-card {
-    padding: 9px 10px;
-  }
-
-  .preset-card .title {
-    font-size: 12px;
-  }
-
-  .preset-card .cars {
-    font-size: 10px;
+  .cluster-tab {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    font-size: 13px;
   }
 
   .wave-canvas {
     height: auto;
-    margin: 8px 0 12px;
+    margin: 6px 0 10px;
+  }
+
+  .mode-bar {
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .mode-bar input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Sticky bottom thumb-first Driving Dock */
+  .controls-row {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: rgba(11, 13, 18, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    grid-template-columns: 1fr 2.1fr 1fr;
+    gap: 10px;
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.55);
+  }
+
+  .btn-shift,
+  .btn-throttle {
+    min-height: 64px;
+    border-radius: 14px;
+    padding: 10px 8px;
+  }
+
+  .btn-main {
+    font-size: 16px;
+  }
+
+  .btn-shift .btn-key {
+    display: none;
+  }
+
+  .btn-throttle .btn-key {
+    font-size: 11px;
+  }
+
+  .btn-throttle {
+    background: linear-gradient(180deg, #ff453a, #b91c1c);
+    border-color: #ff6b61;
+    box-shadow: 0 4px 18px rgba(255, 69, 58, 0.35);
+  }
+
+  .btn-throttle.pressed {
+    transform: scale(0.97);
+    filter: brightness(1.18);
+  }
+
+  /* Spacious touch cards & oversized slider knobs */
+  .preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .preset-card {
+    padding: 12px 11px;
+    border-radius: 12px;
+  }
+
+  .preset-card .title {
+    font-size: 13px;
+  }
+
+  .preset-card .sub {
+    font-size: 11px;
+  }
+
+  .preset-card .cars {
+    font-size: 10.5px;
+  }
+
+  .slider-item label {
+    font-size: 13.5px;
+    margin-bottom: 8px;
+  }
+
+  input[type="range"] {
+    height: 32px;
+  }
+
+  .footer {
+    margin-bottom: 8px;
   }
 }

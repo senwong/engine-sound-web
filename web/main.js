@@ -138,8 +138,13 @@ const wasmBytesPromise = fetch('engine_dsp.wasm')
     return null;
   });
 
+const IS_IOS =
+  /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const IS_SAFARI =
   /Safari/i.test(navigator.userAgent) && !/Chrome|Chromium|Edg|CriOS|FxiOS/i.test(navigator.userAgent);
+// Every browser on iOS (Safari, Chrome, Edge, WeChat) uses WebKit under the hood
+const USE_SCRIPT_PROCESSOR = IS_IOS || IS_SAFARI;
 
 // Simulation state
 let activePreset = PRESETS[0];
@@ -341,8 +346,8 @@ async function initScriptProcessorFallback(wasmBytes) {
   localOutPtr = localWasm.engine_get_output_ptr();
   localPower = true;
 
-  // 1024 samples (~21ms @ 48kHz), processed in 512-sample chunks matching Wasm MAX_FRAMES
-  scriptNode = audioCtx.createScriptProcessor(1024, 0, 2);
+  // Use 1 input channel + silent oscillator driver so iOS WebKit reliably fires onaudioprocess!
+  scriptNode = audioCtx.createScriptProcessor(2048, 1, 2);
   scriptNode.onaudioprocess = (e) => {
     const outL = e.outputBuffer.getChannelData(0);
     const outR = e.outputBuffer.getChannelData(1);
@@ -364,6 +369,14 @@ async function initScriptProcessorFallback(wasmBytes) {
       offset += chunk;
     }
   };
+
+  // Silent dummy driver keeps the audio graph active on iOS Safari / WebKit
+  const dummyOsc = audioCtx.createOscillator();
+  const silentGain = audioCtx.createGain();
+  silentGain.gain.value = 0;
+  dummyOsc.connect(silentGain);
+  silentGain.connect(scriptNode);
+  dummyOsc.start();
 
   scriptNode.connect(analyser);
   analyser.connect(audioCtx.destination);
@@ -389,9 +402,8 @@ async function initAudio() {
     wasmBytes = await wasmRes.arrayBuffer();
   }
 
-  // Safari (iOS & macOS) has known AudioWorklet + Wasm silent-output bugs;
-  // use rock-solid main-thread Wasm + ScriptProcessorNode on Safari, and AudioWorklet elsewhere
-  const canUseWorklet = Boolean(audioCtx.audioWorklet) && !IS_SAFARI;
+  // On iOS WebKit & macOS Safari, use main-thread Wasm + ScriptProcessorNode with silent driver
+  const canUseWorklet = Boolean(audioCtx.audioWorklet) && !USE_SCRIPT_PROCESSOR;
 
   if (canUseWorklet) {
     try {
@@ -494,6 +506,10 @@ function setThrottle(down) {
 
 throttleBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
+  // Auto-resume AudioContext on iOS if suspended/interrupted
+  if (audioCtx && audioCtx.state !== 'running') {
+    unlockSafariAudio(audioCtx);
+  }
   if (throttleBtn.setPointerCapture) {
     try {
       throttleBtn.setPointerCapture(e.pointerId);

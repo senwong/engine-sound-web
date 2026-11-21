@@ -2,9 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0b0d12" />
   <title>Engine Sound Lab — 实时物理引擎声浪合成器 (Rust + Wasm)</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <div class="app">
@@ -48,12 +50,19 @@
 
         <canvas id="waveCanvas" width="420" height="72" class="wave-canvas"></canvas>
 
-        <div class="controls-row">
-          <button id="shiftDownBtn" class="btn-shift" title="快捷键 Q / ↓">− 降档 (Q)</button>
-          <button id="throttleBtn" class="btn-throttle" title="按住鼠标或空格 / W 键踩油门">
-            踩下油门 (按住 / Space / W)
+        <div class="controls-row" id="drivingDock">
+          <button id="shiftDownBtn" class="btn-shift" title="快捷键 Q / ↓">
+            <span class="btn-main">− 降档</span>
+            <span class="btn-key">Q</span>
           </button>
-          <button id="shiftUpBtn" class="btn-shift" title="快捷键 E / ↑">+ 升档 (E)</button>
+          <button id="throttleBtn" class="btn-throttle" title="按住鼠标或空格 / W 键踩油门">
+            <span class="btn-main">踩下油门</span>
+            <span class="btn-key">按住 / Space / W</span>
+          </button>
+          <button id="shiftUpBtn" class="btn-shift" title="快捷键 E / ↑">
+            <span class="btn-main">+ 升档</span>
+            <span class="btn-key">E</span>
+          </button>
         </div>
 
         <div class="mode-bar">
@@ -120,6 +129,6 @@
     </footer>
   </div>
 
-  <script type="module" src="main.js"></script>
+  <script type="module" src="main.js?v=3"></script>
 </body>
 </html>
