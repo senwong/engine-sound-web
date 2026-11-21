@@ -1,4 +1,21 @@
-import { CLUSTERS, drawCluster } from './clusters.js';
+import { CLUSTERS, CLUSTER_BRANDS, drawCluster } from './clusters.js?v=7526016c';
+
+// ---- iOS: block long-press "Search / Translate" menu, selection, pinch & double-tap zoom ----
+document.addEventListener('selectstart', (e) => e.preventDefault());
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener(
+  'touchend',
+  (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+    const sel = window.getSelection && window.getSelection();
+    if (sel && sel.rangeCount) sel.removeAllRanges();
+  },
+  { passive: false }
+);
 
 const PRESET_CATS = [
   { id: 'all', label: '全部' },
@@ -56,13 +73,13 @@ let isRunning = false;
 let wasmReady = false;
 
 // Pre-fetch Wasm binary on page load so clicking START unlocks Safari audio immediately without network delay
-const wasmBytesPromise = fetch('engine_dsp.wasm')
+const wasmBytesPromise = fetch('engine_dsp.wasm?v=2286b53a')
   .then((res) => {
-    if (!res.ok) throw new Error(`无法加载 engine_dsp.wasm (${res.status})`);
+    if (!res.ok) throw new Error(`无法加载 engine_dsp.wasm?v=2286b53a (${res.status})`);
     return res.arrayBuffer();
   })
   .catch((err) => {
-    console.error('Pre-fetch engine_dsp.wasm failed:', err);
+    console.error('Pre-fetch engine_dsp.wasm?v=2286b53a failed:', err);
     return null;
   });
 
@@ -189,6 +206,10 @@ clusterSwitcher.addEventListener('click', (e) => {
 
 prevClusterBtn.onclick = () => cycleCluster(-1);
 nextClusterBtn.onclick = () => cycleCluster(1);
+brandTabs.innerHTML = CLUSTER_BRANDS.map((b) => {
+  const n = b.id === 'all' ? CLUSTERS.length : CLUSTERS.filter((c) => c.brand === b.id).length;
+  return `<button class="brand-tab${b.id === 'all' ? ' active' : ''}" data-brand="${b.id}">${b.label} ${n}</button>`;
+}).join('');
 renderClusterPills();
 
 // Render preset buttons
@@ -339,9 +360,9 @@ async function initAudio() {
 
   let wasmBytes = await wasmBytesPromise;
   if (!wasmBytes) {
-    const wasmRes = await fetch('engine_dsp.wasm');
+    const wasmRes = await fetch('engine_dsp.wasm?v=2286b53a');
     if (!wasmRes.ok) {
-      throw new Error(`无法加载 engine_dsp.wasm (${wasmRes.status})，请先运行 ./build.sh`);
+      throw new Error(`无法加载 engine_dsp.wasm?v=2286b53a (${wasmRes.status})，请先运行 ./build.sh`);
     }
     wasmBytes = await wasmRes.arrayBuffer();
   }
@@ -351,7 +372,7 @@ async function initAudio() {
 
   if (canUseWorklet) {
     try {
-      await audioCtx.audioWorklet.addModule('engine-worklet.js');
+      await audioCtx.audioWorklet.addModule('engine-worklet.js?v=55919d26');
       workletNode = new AudioWorkletNode(audioCtx, 'engine-worklet-processor', {
         numberOfInputs: 0,
         numberOfOutputs: 1,
@@ -485,8 +506,17 @@ function shiftDown() {
   }
 }
 
-shiftUpBtn.onclick = shiftUp;
-shiftDownBtn.onclick = shiftDown;
+// pointerdown (not click) so shifting is instant and survives the double-tap guard on iOS
+function bindTapButton(btn, fn) {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    fn();
+  });
+  btn.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+}
+bindTapButton(shiftUpBtn, shiftUp);
+bindTapButton(shiftDownBtn, shiftDown);
+throttleBtn.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
 
 // Prevent buttons/checkboxes from keeping focus and being toggled by Space/Arrows
 document.addEventListener('click', (e) => {
@@ -548,13 +578,25 @@ autoShiftToggle.onchange = () => {
   autoShift = autoShiftToggle.checked;
 };
 
+function updateSliderTrack(el) {
+  const min = parseFloat(el.min) || 0;
+  const max = parseFloat(el.max) || 100;
+  const val = parseFloat(el.value) || 0;
+  const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+  el.style.setProperty('--pct', `${Math.max(0, Math.min(100, pct))}%`);
+}
+
 manualRpmSlider.oninput = () => {
   manualRpmVal.textContent = `${manualRpmSlider.value} RPM`;
+  updateSliderTrack(manualRpmSlider);
 };
+updateSliderTrack(manualRpmSlider);
 
 // Tuning sliders
 function bindSlider(el, labelId, fmt) {
+  updateSliderTrack(el);
   el.oninput = () => {
+    updateSliderTrack(el);
     document.getElementById(labelId).textContent = fmt(parseFloat(el.value));
     syncTuning();
   };
@@ -573,6 +615,7 @@ document.getElementById('resetMixBtn').onclick = () => {
   vibSlider.value = 1.0;
   inValveSlider.value = 0.0;
   exValveSlider.value = 0.0;
+  [volSlider, intakeSlider, exhaustSlider, vibSlider, inValveSlider, exValveSlider].forEach(updateSliderTrack);
   document.getElementById('volVal').textContent = '36%';
   document.getElementById('intakeVal').textContent = '1.00×';
   document.getElementById('exhaustVal').textContent = '1.00×';
@@ -602,24 +645,27 @@ function stepPhysics(dt) {
 
   const idle = activePreset.idle;
   const redline = activePreset.redline;
+  const maxRpm = activePreset.maxRpm;
+  const span = Math.max(2500, redline - idle);
+  const limiterPeak = Math.min(maxRpm - 80, redline + span * 0.045);
 
-  // Gear load factor: Neutral revs very fast, higher gears climb slower
-  const accelRate = gear === 0 ? 5200 : 1100 * GEAR_RATIOS[gear];
-  const engineBrake = gear === 0 ? 3200 : 850 * GEAR_RATIOS[gear];
+  // Scale rev speed with engine's RPM range so F1/moto engines snap cleanly to redline
+  const accelRate = gear === 0 ? span * 0.95 : span * 0.22 * GEAR_RATIOS[gear];
+  const engineBrake = gear === 0 ? span * 0.52 : span * 0.15 * GEAR_RATIOS[gear];
 
   if (limiterCut) {
     limiterTimer -= dt;
-    rpm -= 4200 * dt;
-    if (limiterTimer <= 0) limiterCut = false;
+    rpm -= span * 0.65 * dt;
+    if (limiterTimer <= 0 || rpm <= redline - span * 0.02) limiterCut = false;
   } else if (throttlePressed) {
     rpm += accelRate * dt;
-    if (rpm >= redline) {
+    if (rpm >= limiterPeak) {
       if (autoShift && gear >= 1 && gear < 6) {
         shiftUp();
       } else {
-        rpm = redline;
+        rpm = limiterPeak;
         limiterCut = true;
-        limiterTimer = 0.065; // crisp rev-limiter bounce
+        limiterTimer = 0.06; // crisp redline bounce inside the red zone
       }
     }
   } else {

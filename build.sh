@@ -15,9 +15,12 @@ echo "[2/3] Building Rust DSP core -> wasm32-unknown-unknown (release)..."
 cd "$ROOT_DIR/engine-wasm"
 cargo build --target wasm32-unknown-unknown --release
 
-echo "[3/3] Copying engine_dsp.wasm to web/..."
+echo "[3/4] Copying engine_dsp.wasm to web/..."
 cp "$ROOT_DIR/engine-wasm/target/wasm32-unknown-unknown/release/engine_wasm.wasm" \
    "$ROOT_DIR/web/engine_dsp.wasm"
+
+echo "[4/4] Stamping content hashes on web assets..."
+node "$ROOT_DIR/scripts/stamp-assets.mjs"
 
 ls -lh "$ROOT_DIR/web/engine_dsp.wasm"
 echo "Done! Run: cd web && python3 -m http.server 8080"

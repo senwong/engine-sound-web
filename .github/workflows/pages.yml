@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Stamp content hashes on web assets
+        run: node scripts/stamp-assets.mjs
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Upload web artifact

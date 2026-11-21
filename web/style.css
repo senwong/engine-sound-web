@@ -24,6 +24,8 @@ html,
 body {
   width: 100%;
   overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -344,8 +346,48 @@ body {
 .toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 9px;
   cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.toggle input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #232a3a;
+  border: 1px solid #354057;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.toggle input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s;
+}
+
+.toggle input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #ff453a, #dc2626);
+  border-color: #ff6b61;
+  box-shadow: 0 0 12px rgba(255, 69, 58, 0.35);
+}
+
+.toggle input[type="checkbox"]:checked::after {
+  transform: translateX(18px);
+  background: #ffffff;
 }
 
 .manual-rpm-row {
@@ -483,9 +525,48 @@ body {
 }
 
 input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  accent-color: var(--accent);
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    var(--accent) var(--pct, 50%),
+    #232a3a var(--pct, 50%),
+    #232a3a 100%
+  );
+  outline: none;
   cursor: pointer;
+  margin: 8px 0;
+  touch-action: pan-y;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff, #dbe3f0 65%, #94a3b8 100%);
+  border: 2.5px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 10px rgba(255, 69, 58, 0.35);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.65), 0 0 16px rgba(255, 69, 58, 0.65);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff, #dbe3f0 65%, #94a3b8 100%);
+  border: 2.5px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
 }
 
 .footer {
@@ -608,12 +689,22 @@ input[type="range"] {
 
   .mode-bar {
     font-size: 14px;
-    margin-top: 8px;
+    margin-top: 10px;
+    gap: 12px;
   }
 
-  .mode-bar input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+  .toggle input[type="checkbox"] {
+    width: 46px;
+    height: 26px;
+  }
+
+  .toggle input[type="checkbox"]::after {
+    width: 20px;
+    height: 20px;
+  }
+
+  .toggle input[type="checkbox"]:checked::after {
+    transform: translateX(20px);
   }
 
   /* Sticky bottom thumb-first Driving Dock */
@@ -704,13 +795,26 @@ input[type="range"] {
     font-size: 10.5px;
   }
 
+  .slider-item {
+    background: #10141e;
+    border: 1px solid #1e2536;
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+
   .slider-item label {
     font-size: 13.5px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   input[type="range"] {
-    height: 32px;
+    height: 10px;
+    margin: 6px 0 2px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
   }
 
   .footer {
