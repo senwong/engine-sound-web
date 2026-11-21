@@ -20,6 +20,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   background: radial-gradient(circle at 20% 0%, #171c29 0%, var(--bg) 60%);
@@ -28,6 +34,7 @@ body {
 }
 
 .app {
+  width: 100%;
   max-width: 1120px;
   margin: 0 auto;
   padding: 20px 24px 32px;
@@ -108,13 +115,13 @@ body {
 
 .grid {
   display: grid;
-  grid-template-columns: 460px 1fr;
+  grid-template-columns: 460px minmax(0, 1fr);
   gap: 20px;
 }
 
 @media (max-width: 920px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -123,6 +130,8 @@ body {
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   padding: 20px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .cluster-panel {
@@ -506,6 +515,9 @@ input[type="range"] {
 
   /* Bigger tap targets for cluster switcher on mobile */
   .brand-tabs {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     flex-wrap: nowrap;
     overflow-x: auto;
     justify-content: flex-start;
@@ -542,6 +554,9 @@ input[type="range"] {
   }
 
   .cluster-switcher {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     flex-wrap: nowrap;
     overflow-x: auto;
     justify-content: flex-start;
